@@ -70,6 +70,7 @@ Crie um arquivo `.env` na raiz:
 ```env
 OPENAI_API_KEY=...
 TAVILY_API_KEY=...
+```
 
 # Opcional/recomendado
 API_KEY=uma-chave-forte
