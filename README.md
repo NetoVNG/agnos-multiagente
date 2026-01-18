@@ -6,7 +6,7 @@ Projeto em Python para orquestrar **agentes especializados** (pesquisa, educaç�
 - **Execução via FastAPI** (`/route` e `/run`)
 - **Tools em camadas** (fundamentais, pesquisa, educacionais, planejamento, criativas, universais)
 - **Logs cognitivos** (JSONL + Markdown) para auditoria e evolução do sistema
-- **Deploy com Docker** (Opção B)
+- **Deploy com Docker** 
 
 ---
 
