@@ -6,7 +6,7 @@ Projeto em Python para orquestrar **agentes especializados** (pesquisa, educaç�
 - **Execução via FastAPI** (`/route` e `/run`)
 - **Tools em camadas** (fundamentais, pesquisa, educacionais, planejamento, criativas, universais)
 - **Logs cognitivos** (JSONL + Markdown) para auditoria e evolução do sistema
-- **Deploy com Docker** (opção B)
+- **Deploy com Docker** (Opção B)
 
 ---
 
@@ -16,61 +16,59 @@ O sistema funciona assim:
 
 1. O usuário envia uma pergunta.
 2. O **Router Cognitivo** decide qual agente deve atuar.
-3. O agente escolhido executa com suas tools.
+3. O agente escolhido executa usando suas **tools**.
 4. A API retorna:
-   - `agente` selecionado
-   - `saida` (resposta gerada)
-   - `meta` (session_id, modo, etc.)
-5. O fluxo é registrado em logs (`logs/cognitive_log.jsonl` e `logs/cognitive_log.md`).
+   - `agente`: agente selecionado
+   - `saida`: resposta gerada
+   - `meta`: metadados (ex.: `session_id`, modo, etc.)
+5. Todo o fluxo é registrado em logs:
+   - `logs/cognitive_log.jsonl`
+   - `logs/cognitive_log.md`
 
 ---
 
 ## 📁 Estrutura de Pastas (sugerida)
 
+```text
 .
 ├── api/
-│ ├── main.py
-│ ├── schemas.py
-│ └── bootstrap_runtime.py
+│   ├── main.py
+│   ├── schemas.py
+│   └── bootstrap_runtime.py
 ├── agents/
-│ ├── agente_orquestrador.py
-│ ├── agente_pesquisador.py
-│ ├── agente_educador.py
-│ ├── agente_planejador.py
-│ ├── agente_conteudo.py
-│ └── agente_diagnostico.py
+│   ├── agente_orquestrador.py
+│   ├── agente_pesquisador.py
+│   ├── agente_educador.py
+│   ├── agente_planejador.py
+│   ├── agente_conteudo.py
+│   └── agente_diagnostico.py
 ├── tools/
-│ ├── tools_fundamentais.py
-│ ├── tools_pesquisa.py
-│ ├── tools_educacionais.py
-│ ├── tools_planejamento_vida.py
-│ ├── tools_criativas_conteudo.py
-│ ├── tools_universais.py
-│ └── tools_logs_cognitivos.py
+│   ├── tools_fundamentais.py
+│   ├── tools_pesquisa.py
+│   ├── tools_educacionais.py
+│   ├── tools_planejamento_vida.py
+│   ├── tools_criativas_conteudo.py
+│   ├── tools_universais.py
+│   └── tools_logs_cognitivos.py
 ├── logs/
-│ ├── cognitive_log.jsonl
-│ └── cognitive_log.md
+│   ├── cognitive_log.jsonl
+│   └── cognitive_log.md
 ├── .env
 ├── requirements.txt (ou pyproject.toml)
 └── Dockerfile
+```
 
-
-> Observação: a pasta `logs/` é criada automaticamente se não existir.
-
----
-
-> Observação: a pasta `logs/` é criada automaticamente se não existir.
+> **Observação:** a pasta `logs/` é criada automaticamente se não existir.
 
 ---
 
 ## 🔐 Variáveis de Ambiente (`.env`)
 
-Crie um arquivo `.env` na raiz:
+Crie um arquivo `.env` na raiz do projeto:
 
 ```env
 OPENAI_API_KEY=...
 TAVILY_API_KEY=...
-```
 
 # Opcional/recomendado
 API_KEY=uma-chave-forte
@@ -79,102 +77,122 @@ MAX_INPUT_CHARS=3000
 
 # Opcional
 ENABLE_PESQUISADOR=1
+```
 
+### Regras
 
-🚀 Como Rodar Local (sem Docker)
+- `OPENAI_API_KEY` é **obrigatória**.
+- `TAVILY_API_KEY` é **obrigatória** se `ENABLE_PESQUISADOR=1` e o pesquisador usa Tavily.
+- `API_KEY` é recomendada para proteger a API em produção.
 
-Instale dependências:
+---
 
+## 🚀 Como Rodar Local (sem Docker)
+
+1) Instale dependências:
+
+```bash
 pip install -r requirements.txt
+```
 
-Suba a API:
+2) Suba a API:
 
+```bash
 uvicorn api.main:app --reload
+```
 
+3) Abra no navegador:
 
-Abra:
+- `http://127.0.0.1:8000/docs` (Swagger)
+- `http://127.0.0.1:8000/health`
 
-http://127.0.0.1:8000/docs (Swagger)
+---
 
-http://127.0.0.1:8000/health
+## 🧪 Endpoints da API
 
-🧪 Endpoints da API
-GET /health
+### `GET /health`
 
 Retorna status básico.
 
-POST /route
+### `POST /route`
 
-Roteia (decide agente), não executa.
+Roteia (decide agente), **não executa**.
 
-Body:
+**Body:**
 
+```json
 { "pergunta": "Crie um roteiro para Instagram" }
+```
 
+**Resposta:**
 
-Resposta:
-
+```json
 {
   "agente": "conteudo",
   "saida": null,
   "meta": { "modo": "llm-routing", "session_id": "..." }
 }
+```
 
-POST /run
+### `POST /run`
 
-Roteia e executa o agente, retornando saida.
+Roteia e executa o agente, retornando `saida`.
 
-Body:
+**Body:**
 
+```json
 { "pergunta": "Crie um roteiro para Instagram" }
+```
 
+**Resposta:**
 
-Resposta:
-
+```json
 {
   "agente": "conteudo",
   "saida": "texto gerado...",
   "meta": { "execucao": "ok", "session_id": "..." }
 }
+```
 
-🧾 Logs Cognitivos (Auditoria)
+---
 
-A tool tools/tools_logs_cognitivos.py escreve:
+## 🧾 Logs Cognitivos (Auditoria)
 
-JSONL: logs/cognitive_log.jsonl (ideal para ingestão / análise / dashboards)
+A tool `tools/tools_logs_cognitivos.py` registra:
 
-Markdown: logs/cognitive_log.md (ideal para leitura humana)
+- **JSONL**: `logs/cognitive_log.jsonl` (ideal para ingestão / análise / dashboards)
+- **Markdown**: `logs/cognitive_log.md` (ideal para leitura humana)
 
 Eventos típicos:
 
-request_received
+- `request_received`
+- `routing_start`
+- `routing_decision`
+- `agent_start`
+- `agent_end`
+- `error`
 
-routing_start
+---
 
-routing_decision
+## 🐳 Deploy com Docker (Opção B)
 
-agent_start
+### 1) Garanta `uvicorn` nas dependências
 
-agent_end
+No `requirements.txt`, inclua **no mínimo**:
 
-error
-
-🐳 Deploy com Docker (Opção B)
-1) Garanta uvicorn nas dependências
-
-No requirements.txt inclua, no mínimo:
-
+```text
 fastapi
 uvicorn[standard]
 python-dotenv
+```
 
+> Inclua também `agno`, `tavily` (ou dependências do `TavilyTools`) e quaisquer outras libs usadas no projeto.
 
-Inclua também agno, tavily (ou dependências do TavilyTools) e qualquer outra lib usada no projeto.
+### 2) Dockerfile (recomendado)
 
-2) Dockerfile (recomendado)
+Use `python -m uvicorn` para evitar problemas de PATH:
 
-Use python -m uvicorn para evitar problemas de PATH:
-
+```dockerfile
 FROM python:3.13-slim
 
 WORKDIR /app
@@ -192,19 +210,30 @@ COPY . .
 
 EXPOSE 8000
 CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
 
-3) Build
+### 3) Build
+
+```bash
 docker build -t agno-api .
+```
 
-4) Run (com .env)
+### 4) Run (com `.env`)
+
+```bash
 docker run --rm -p 8000:8000 --env-file .env agno-api
+```
 
-5) Persistir logs (opcional)
+### 5) Persistir logs (opcional)
 
-Windows PowerShell:
+No Windows PowerShell:
 
+```bash
 docker run --rm -p 8000:8000 --env-file .env -v "%cd%/logs:/app/logs" agno-api
+```
 
+---
 
-✍️ Assinatura
+## ✍️ Assinatura
+
 Sagaz.Lab 864
